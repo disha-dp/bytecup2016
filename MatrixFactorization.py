@@ -1,18 +1,15 @@
-
-# coding: utf-8
-
-# In[115]:
+import nimfa
 
 import pandas as pa
 import numpy as np
-#collaborative filtering
-#train_file = open("../bytecup2016data/train_data.txt")
-train_data = pa.read_csv("../bytecup2016data/train_data_mini.txt", sep ="\t")
-#print train_data
 
-train_features = pa.read_csv("../bytecup2016data/question_info.txt", sep ="\t")
+train_data = pa.read_csv("train_data.txt", sep ="\t")
+
+train_features = pa.read_csv("question_info.txt", sep ="\t")
 
 print train_data.shape
+import os
+os.system("taskset -p 0xff %d" % os.getpid())
 
 
 # In[119]:
@@ -36,7 +33,7 @@ print 'total questions in training set: ',len(allQuestions)
 numExperts = len(allUniqueUsers)
 
 
-# In[117]:
+# In[298]:
 
 #using the question info, get its category from the other dataframe
 #we have a question and category
@@ -45,7 +42,7 @@ expert_category_map = train_data.ix[:,[0,1]].merge(train_features.ix[:,[0,1]], l
 print expert_category_map.shape
 
 
-# In[79]:
+# In[299]:
 
 #convert above into [expert,  ]
 maxCat = max(list(expert_category_map.ix[:,1]))
@@ -56,31 +53,30 @@ expert_list = (list(expert_category_map.ix[:,0].unique()))
 print len(expert_category_map[expert_category_map.isnull().any(axis=1)])
 
 
-# In[121]:
+# In[301]:
 
-expert_category_matrix = np.zeros((numExperts, maxCat+1))
+expert_category_matrix = np.zeros((numExperts, int(maxCat)+1))
 
-total_expert_cat_entries = len(expert_category_map)
 
 experts_found = []
 
 expert_category_map = expert_category_map.dropna()
+total_expert_cat_entries = len(expert_category_map)
 
 for row_num in range(total_expert_cat_entries-1):
     #print expert_category_map.iloc[row_num][0]
     exp = expert_list.index( expert_category_map.iloc[row_num][0])    
-    cat = expert_category_map.iloc[row_num][1]      
+    cat = int(expert_category_map.iloc[row_num][1])  
     expert_category_matrix[exp][cat] += 1
         
 
 
-# In[122]:
+# In[302]:
 
-#print expert_category_matrix[:5]
 print expert_category_matrix.shape
 
 
-# In[83]:
+# In[303]:
 
 def matrix_factorization(R, P, Q, K, steps=5000, alpha=0.0002, beta=0.02):
     Q = Q.T
@@ -100,17 +96,19 @@ def matrix_factorization(R, P, Q, K, steps=5000, alpha=0.0002, beta=0.02):
                     e = e + pow(R[i][j] - np.dot(P[i,:],Q[:,j]), 2)
                     for k in xrange(K):
                         e = e + (beta/2) * (pow(P[i][k],2) + pow(Q[k][j],2))
-        if e < 0.1:
+        if e < 0.01:
             break
     return P, Q.T
 
 
 # In[84]:
+print '#################    computing the R hat matrix'
+print 'approach SGD for computing R hat'
 
 R = np.array(expert_category_matrix)
 N = len(R)
 M = len(R[0])
-K = 2
+K = 10
 
 P = np.random.rand(N,K)
 Q = np.random.rand(M,K)
@@ -118,28 +116,40 @@ nP, nQ = matrix_factorization(R, P, Q, K)
 nR = np.dot(nP, nQ.T)
 
 
-# In[ ]:
+
+print '#################computing the R hat matrix'
+print 'approach nimfa , given library for computing R hat'
+
+V = R   #nimfa.examples.medulloblastoma.read(normalize=True)
+
+lsnmf = nimfa.Lsnmf(V, seed='random_vcol', rank=50, max_iter=100)
+lsnmf_fit = lsnmf()
+
+print('Rss: %5.4f' % lsnmf_fit.fit.rss())
+print('Evar: %5.4f' % lsnmf_fit.fit.evar())
+print('K-L divergence: %5.4f' % lsnmf_fit.distance(metric='kl'))
+print('Sparseness, W: %5.4f, H: %5.4f' % lsnmf_fit.fit.sparseness())
+
+
+print '#################   Finished computing the R hat matrix'
+
 
 # for each expert in train set, output the score in the table for that [expert][category]
 #compare it to the output in the train file
 #this gives train accuracy
 print nR
-
-
-# In[16]:
-
-print R
 #convert test data into expert_tag table
 # for each expert, output the score in the table for that [expert][category]
 #compare it to the output in the test file
 
 
-# In[19]:
+# In[306]:
+print 'saving file'
 
 np.savetxt("myCalcArr.txt",nR)
 
 
-# In[128]:
+# In[307]:
 
 print nR.shape
 print type(nR)
@@ -149,21 +159,13 @@ y_normed = x/x.max(axis=1).reshape(nR.shape[0],1)
 print y_normed
 
 
-# In[126]:
+# In[308]:
 
 print x_normed
 print x[0]
 
 
-# In[87]:
-
-#now validate your array results 
-#validation_data = pa.read_csv("validation_mini.txt",sep ='\t')
-
-validation_data = pa.read_csv("../bytecup2016data/validation_mini.txt", sep ="\t")
-
-
-# In[90]:
+# In[312]:
 
 #get training accuracy 
 
@@ -181,63 +183,83 @@ trainAccSet = train_data.iloc[:,[0,1]]
 #measure accuracy
 
 
-# In[129]:
+# In[313]:
 
 #print expert_category_map
 prob = []
-for i in range(expert_category_map.shape[0]):
-    expertID = expert_category_map.iloc[i][0]
-    category = expert_category_map.iloc[i][1]
+for i in range(int(expert_category_map.shape[0])):
+    expertID = (expert_category_map.iloc[i][0])
+    category = int(expert_category_map.iloc[i][1])
     exp = expert_list.index(expertID)
     prob.append(y_normed[exp][category])  
-    #exp = expert_list.index( expertID)    
-print prob
+    
+    
+print len(prob)
 
 
 
-# In[130]:
+# In[336]:
 
 print expert_category_matrix.shape
 
 
-# In[132]:
+# In[337]:
 
-c =np.c_[expert_category_map, prob]
-#print len(prob)
-#print expert_category_map.shape
-#print nR.shape
-#print c
+#now validate your array results 
+#validation_data = pa.read_csv("validation_mini.txt",sep ='\t')
 
-cd = pa.DataFrame(c,columns = ["expert_ID", "category","probability"])
-
-print cd
+validation_data = pa.read_csv("validate_nolabel.txt", sep =",")
 
 
-# In[154]:
+# In[362]:
 
-expert_question_map = train_data.ix[:,[0,1,2]].merge(cd.ix[:,[0,1,2]], left_on='expert_ID', right_on='expert_ID', how='inner').ix[:,[0,1,2,4]]
+rValid = validation_data.shape[0]
+cValid = validation_data.shape[1]
+
+validation_QEC_map = validation_data.ix[:,[0,1]].merge(train_features.ix[:,[0,1]], left_on='question_ID2', right_on='question_ID1', how='left').ix[:,[0,1,3]]
+
+#print validation_QEC_map
+
+rV = validation_QEC_map.shape[0]
+cV = validation_QEC_map.shape[1]
+
+out = []
+for entry in range(rV):
+    #print  validation_QEC_map.ix[entry][1],  validation_QEC_map.ix[entry][2]
+    
+    exp = validation_QEC_map.ix[entry][1]
+    cat =  validation_QEC_map.ix[entry][2]
+    
+    try:
+        catInt = int(cat)
+
+        if exp in expert_list:
+            exp_idx = expert_list.index(exp)
+            prob = x_normed[exp_idx][catInt]
+        else: 
+            prob = 0
+    except:
+        prob = 0
+    out.append(prob)
+
+print len(out)
 
 
+# In[392]:
 
-cj = train_data.ix[:,[0,1,2]].join(cd.ix[:,[0,1,2]], on='expert_ID', how='inner',  lsuffix='_left', rsuffix='_right', sort=False)
-  
-print cj.shape
-print cj
+import math
+import numpy as np
+#print map(abs,out)
 
+final_res = np.c_[validation_data, out]
 
-print expert_question_map.shape
+cn = np.array(final_res)
 
-print train_data.shape
+print type(cn)
 
-print cd.shape
-#print expert_question_map#.ix[:,[0,1]]
+final_DF = pa.DataFrame(cn)
 
-
-# In[149]:
-
-gv= np.array(expert_question_map)
-print type(gv)
-np.savetxt("myFinalPreds.txt",gv)
+final_DF.to_csv("final.csv", sep =",")
 
 
 # In[ ]:
