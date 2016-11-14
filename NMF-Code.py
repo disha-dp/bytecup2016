@@ -56,11 +56,11 @@ nmf_model = ProjectedGradientNMF(n_components = 600, init='nndsvda', random_stat
 nmf_model.fit(X_imputed.values)
 
 # iterate model
-while nmf_model.reconstruction_err_**2 > 10:
+#while nmf_model.reconstruction_err_**2 > 10:
     #nmf_model = NMF( n_components = 600, init='nndsvda', random_state=0,max_iter=300, eta=0.01, alpha = 0.01)
-    W = nmf_model.fit_transform(X_imputed.values)
-    X_imputed.values[~msk] = W.dot(nmf_model.components_)[~msk]
-    print nmf_model.reconstruction_err_
+W = nmf_model.fit_transform(X_imputed.values)
+X_imputed.values[~msk] = W.dot(nmf_model.components_)[~msk]
+print nmf_model.reconstruction_err_
 
 H = nmf_model.components_
 rHat = np.dot(W,H)
