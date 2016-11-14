@@ -1,0 +1,46 @@
+sudo apt-get update
+
+
+sudo apt-get install python-pip
+
+sudo apt-get install python-dev python-nose g++ libopenblas-dev git liblapack-dev
+
+
+
+mkdir download
+pip install -d download numpy
+mkdir build
+cd build
+tar xf ../download/numpy-1.11.2.tar.gz
+
+
+Add site.config to numpy directory
+
+do, 
+sudo python setup.py install
+
+After that check here:
+
+/usr/local/lib/python2.7/dist-packages/numpy-1.11.2-py2.7-linux-x86_64.egg/numpy
+in __config__.py to see if it has:
+
+lapack_info={'libraries': ['lapack'], 
+    'library_dirs': ['/usr/lib'], 'language': 'f77'}
+atlas_threads_info={'libraries': ['openblas'], 
+    'library_dirs': ['/usr/local/lib'], 
+    'language': 'c', 
+    'define_macros': [('ATLAS_WITHOUT_LAPACK', None)], 
+    'include_dirs': ['/usr/local/include']}
+blas_opt_info={'libraries': ['openblas'], 
+    'library_dirs': ['/usr/local/lib'], 
+    'language': 'c', 
+    'define_macros': [('ATLAS_INFO', '"\\"None\\""')], 
+    'include_dirs': ['/usr/local/include']}
+
+
+
+Then scipy:
+sudo apt-get install python-scipy
+
+sklearn:
+sudo pip install sklearn
