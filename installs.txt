@@ -1,3 +1,7 @@
+Follow the link here for installatins:
+
+http://gromgull.net/blog/2013/07/multithreaded-scipynumpy-with-openblas-on-debian/
+
 sudo apt-get update
 
 
