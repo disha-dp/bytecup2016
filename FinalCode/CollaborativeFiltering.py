@@ -6,10 +6,10 @@ import math
 from itertools import izip
 
 
-training_data = pa.read_csv("../bytecup2016data/invited_info_train.txt", sep = "\t")
-question_data =  pa.read_csv("../bytecup2016data/question_info.txt", sep="\t")
-user_data =  pa.read_csv("../bytecup2016data/user_info.txt", sep = "\t")
-validation_info = pa.read_csv("../bytecup2016data/validate_nolabel.txt", sep = ",")
+training_data = pa.read_csv("./bytecup2016data/invited_info_train.txt", sep = "\t")
+question_data =  pa.read_csv("./bytecup2016data/question_info.txt", sep="\t")
+user_data =  pa.read_csv("./bytecup2016data/user_info.txt", sep = "\t")
+validation_info = pa.read_csv("./bytecup2016data/validate_nolabel.txt", sep = ",")
 
 
 test_data = pa.read_csv("../bytecup2016data/test_nolabel.txt", sep = ",")
