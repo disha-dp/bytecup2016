@@ -236,7 +236,7 @@ avg_matrix = np.nanmean(eq_matrix)
 
 # In[198]:
 
-print avg_matrix
+#print avg_matrix
 
 
 # In[199]:
@@ -306,7 +306,7 @@ with open('CollFiltering_Train3.csv','w') as f:
 
 # In[53]:
 
-print yPred , yPredTrain
+#print yPred , yPredTrain
 
 
 # In[161]:
