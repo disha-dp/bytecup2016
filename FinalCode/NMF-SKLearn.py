@@ -10,12 +10,12 @@ import pickle
 
 from sklearn.metrics import roc_auc_score
 
-train_data = pa.read_csv("../bytecup2016data/invited_info_train.txt", sep ="\t", header='infer')
+train_data = pa.read_csv("./bytecup2016data/invited_info_train.txt", sep ="\t", header='infer')
 
 
-test_data = pa.read_csv("../bytecup2016data/test_no_label.txt", sep =",", header='infer')
+test_data = pa.read_csv("./bytecup2016data/test_no_label.txt", sep =",", header='infer')
 
-validation_data = pa.read_csv("../bytecup2016data/validate_nolabel.txt", sep =",", header='infer')
+validation_data = pa.read_csv("./bytecup2016data/validate_nolabel.txt", sep =",", header='infer')
 
 
 #print train_data.shape
@@ -100,8 +100,8 @@ for row in range(train_data.shape[0]):
 
 
 
-train_info = train_prob#np.c_[train_data, train_prob]
-train_ = ( pa.DataFrame(train_info)).to_csv('train_nmf.csv')
+#train_info = train_prob#np.c_[train_data, train_prob]
+#train_ = ( pa.DataFrame(train_info)).to_csv('train_nmf.csv')
 
 
 
