@@ -12,7 +12,7 @@ user_data =  pa.read_csv("../bytecup2016data/user_info.txt", sep = "\t")
 validation_info = pa.read_csv("../bytecup2016data/validate_nolabel.txt", sep = ",")
 
 
-test_data = pa.read_csv("../bytecup2016data/test.csv", sep = ",")
+test_data = pa.read_csv("../bytecup2016data/test_nolabel.txt", sep = ",")
 
 
 question_list = list(set(training_data.iloc[:,0]))
@@ -236,7 +236,7 @@ avg_matrix = np.nanmean(eq_matrix)
 
 # In[198]:
 
-#print avg_matrix
+print avg_matrix
 
 
 # In[199]:
@@ -280,52 +280,48 @@ yPredTest =  ReadPredictions(test_data)
 
 # In[202]:
 
-yPredTrain = ReadPredictions(training_data)
+#--------yPredTrain = ReadPredictions(training_data)
 
 
 # In[203]:
 
-y_pred_valid_str = map(str, yPredValidation)
-with open('CollFiltering_Validation3.csv','w') as f:
-    f.write('\n'.join(y_pred_valid_str))
+#y_pred_valid_str = map(str, yPredValidation)
+#with open('CollFiltering_Validation3.csv','w') as f:
+#    f.write('\n'.join(y_pred_valid_str))
 
 
 # In[204]:
 
-y_pred_test_str = map(str, yPredTest)
-with open('CollFiltering_Test3.csv','w') as f:
-    f.write('\n'.join(y_pred_test_str))
+#y_pred_test_str = map(str, yPredTest)
+#with open('CollFiltering_Test3.csv','w') as f:
+#    f.write('\n'.join(y_pred_test_str))
 
-
-# In[205]:
-
-y_pred_train_str = map(str, yPredTrain)
-with open('CollFiltering_Train3.csv','w') as f:
-    f.write('\n'.join(y_pred_train_str))
-
-
-# In[53]:
-
-#print yPred , yPredTrain
-
-
-# In[161]:
 
 def RMSE(y_true, y_pred):
     return np.sqrt(np.mean((y_pred - y_true)**2))
 
+import pandas as pa
 
-# In[154]:
 
-with open('CF_NEW_Validation.csv','w') as f:
-    f.write('\n'.join(lines))
+
+#validation_data_formatted = pa.read_csv("./bytecup2016data/validate_nolabel.txt", sep = "\t", names=["qid","uid","label"] )
+pred_df =  pa.DataFrame({'label': yPredValidation}) #pa.DataFrame({'label': y_pred_train_str})
+result = pa.concat([validation_info.ix[:,0:2], pred_df], axis=1)
+result.to_csv('temp_CF.csv', index=False, columns=["qid","uid","label"])
+
+
+
+#test_data_formatted = pa.read_csv("./bytecup2016data/test_nolabel.txt", sep = "\t", names=["qid","uid","label"] )
+pred_df = pa.DataFrame({'label': yPredTest})  #pa.DataFrame({'label': y_pred_train_str})
+result = pa.concat([test_data.ix[:,0:2], pred_df], axis=1)
+result.to_csv('final_CF.csv', index=False, columns=["qid","uid","label"])
 
 
 # In[163]:
 
 #y_preds = ReadPredictions(training_data)
 y_true = training_data.iloc[:,2]
-print RMSE(y_true, yPredTrain)
+#print RMSE(y_true, yPredTrain)
 
 
 
