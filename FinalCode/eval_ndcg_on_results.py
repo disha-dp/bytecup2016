@@ -6,7 +6,12 @@ Note: (i) ndcg.py is assumed to be in ./bytecup2016data and
 import sys
 sys.path.insert(0, './bytecup2016data/')
 import ndcg as ndcg
-path = "f3.csv"
+path = "final.csv"
+try:
+    path = sys.argv[1]
+except:
+    pass
+
 finalcsv = pa.read_csv(path, sep=",",names=["qid","uid","label"] ) 
 mydict = finalcsv.sort_values('label', ascending=False).groupby('qid')['uid'].apply(list).to_dict()
 ndcg_5 = 0
