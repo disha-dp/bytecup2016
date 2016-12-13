@@ -1,30 +1,30 @@
 
 # coding: utf-8
 
-# In[6]:
+# In[1]:
 
 import graphlab as gl
 import pandas as pa
 
 
-# In[7]:
+# In[2]:
 
-training_data = pa.read_csv("../bytecup2016data/invited_info_train.txt", sep = "\t", names=["qid","uid","label"] )
-question_data = pa.read_csv("../bytecup2016data/question_info.txt", sep = "\t", names=["qid","cat","word_tags","char_tags","upvotes","tot_ans","top_q_ans"])
-test_data = pa.read_csv("../bytecup2016data/test.csv", sep = ",")#,names = ["qid","uid","label"])
-validation_data = pa.read_csv("../bytecup2016data/validate_nolabel.txt", sep = ",")
+training_data = pa.read_csv("./bytecup2016data/invited_info_train.txt", sep = "\t", names=["qid","uid","label"] )
+question_data = pa.read_csv("./bytecup2016data/question_info.txt", sep = "\t", names=["qid","cat","word_tags","char_tags","upvotes","tot_ans","top_q_ans"])
+test_data = pa.read_csv("./bytecup2016data/test.csv", sep = ",")#,names = ["qid","uid","label"])
+validation_data = pa.read_csv("./bytecup2016data/validate_nolabel.txt", sep = ",")
 
-user_data = pa.read_csv("../bytecup2016data/user_info.txt", sep = "\t", names = ["uid","tags","word_seq","char_seq"])
+user_data = pa.read_csv("./bytecup2016data/user_info.txt", sep = "\t", names = ["uid","tags","word_seq","char_seq"])
 
 
-# In[8]:
+# In[3]:
 
 qList =  training_data['qid'].tolist()
 eList =  training_data['uid'].tolist()
 labelList =  training_data['label'].tolist()
 
 
-# In[9]:
+# In[4]:
 
 all_data = {}
 all_data['user_id'] = eList
@@ -32,7 +32,7 @@ all_data['item_id'] = qList
 all_data['rating'] = labelList
 
 
-# In[10]:
+# In[5]:
 
 #item info
 '''
@@ -74,7 +74,7 @@ for i in range(rows_train):
         category_str.append("0")
 
 
-# In[11]:
+# In[6]:
 
 from collections import Counter
 
@@ -118,12 +118,12 @@ for i in range(rows_train):
 # Counter({'red': 3, 'apple': 2, 'pear': 1})
 
 
-# In[12]:
+# In[7]:
 
 sf = gl.SFrame({'user_id': eList, 'item_id': qList, 'rating': labelList})
 
 
-# In[ ]:
+# In[8]:
 
 #-------- make prediction without any side features, only latent features 
 #train, test = gl.recommender.util.random_split_by_user(sf, max_num_users= 20000, item_test_proportion=0.2, random_seed=0)
@@ -133,12 +133,12 @@ sf = gl.SFrame({'user_id': eList, 'item_id': qList, 'rating': labelList})
 #evals = m.evaluate(test)
 
 
-# In[13]:
+# In[9]:
 
 user_info = gl.SFrame({'user_id': eList,'word_seq': word_seq})
 
 
-# In[14]:
+# In[10]:
 
 #item_info  = gl.SFrame({'item_id': qList,'total_ans' : tot_ans ,  'top_q_ans': top_q_ans ,'upv': upvotes , 'cat' : category,'ques_desc':word_seq})# , 'cat': catStr, 'top_q_ans' : topQ ,'tot_ans': totAns  })#,'cat_str' : catStrTrain  })
 
@@ -148,7 +148,7 @@ user_info = gl.SFrame({'user_id': eList,'word_seq': word_seq})
 item_info  = gl.SFrame({'item_id': qList,'total_ans' : tot_ans ,  'top_q_ans': top_q_ans ,'upv': upvotes  })
 
 
-# In[15]:
+# In[11]:
 
 sf= gl.SFrame({'item_id': qList, 'user_id': eList, 'rating': labelList})
 
@@ -173,7 +173,7 @@ ranking_factorization_recommender.
 #evalsI = mI.evaluate(testI)
 
 
-# In[16]:
+# In[12]:
 
 #generate validate results
 qvList =  validation_data['qid'].tolist()
@@ -193,7 +193,7 @@ sfValidate = gl.SFrame({'user_id': evList,
 #                       'item_id': qtrList})
 
 
-# In[19]:
+# In[13]:
 
 # with feature and reg
 item_info_val  = gl.SFrame({'item_id': qList,'total_ans' : tot_ans ,  'top_q_ans': top_q_ans ,'upv': upvotes  })
@@ -201,12 +201,12 @@ item_info_val  = gl.SFrame({'item_id': qList,'total_ans' : tot_ans ,  'top_q_ans
 m_full_train = gl.factorization_recommender.create(sf, target='rating',user_data = user_info, item_data= item_info, num_factors=20, regularization=0.01, max_iterations=1000 ,sgd_step_size=0.4  )
 
 
-# In[22]:
+# In[14]:
 
 validation_preds = m_full_train.predict(  sfValidate  )
 
 
-# In[23]:
+# In[15]:
 
 qtList =  test_data['qid'].tolist()
 etList =  test_data['uid'].tolist()
@@ -216,30 +216,32 @@ sfTest = gl.SFrame({'user_id': etList ,'item_id': qtList})
 test_preds = m_full_train.predict(  sfTest  )
 
 
-# In[20]:
+# In[16]:
 
 #train_preds = m_full_train.predict(  sfTrain  )
 
 
-# In[24]:
+# In[17]:
 
-with open('finally.csv','w') as f:
-    f.write('\n'.join(map(str,test_preds)))
-
-
-# In[25]:
-
-with open('temporarily.csv','w') as f:
-    f.write('\n'.join(map(str,validation_preds)))
+pred_df = pa.DataFrame({'label': list(test_preds)})  #pa.DataFrame({'label': y_pred_train_str})
+result = pa.concat([test_data.ix[:,0:2], pred_df], axis=1)
+result.to_csv('final_hybrid.csv', index=False, columns=["qid","uid","label"])
 
 
-# In[21]:
+#with open('finally.csv','w') as f:
+#    f.write('\n'.join(map(str,test_preds)))
 
-#with open('train_vals.csv','w') as f:
-#    f.write('\n'.join(map(str,train_preds)))
+
 
 
 # In[ ]:
 
+
+pred_df = pa.DataFrame({'label': list(validation_preds)})  #pa.DataFrame({'label': y_pred_train_str})
+result = pa.concat([validation_preds.ix[:,0:2], pred_df], axis=1)
+result.to_csv('temp_hybrid.csv', index=False, columns=["qid","uid","label"])
+
+
+# In[24]:
 
 
